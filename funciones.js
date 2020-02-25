@@ -1,13 +1,16 @@
 var canvas = document.getElementById("canvas").getContext("2d");
-var direccion = "vertical";
 var desplazamiento = 15;
-var movimientoPelota, time, velocidadPelota=2, posX, score, gameOver;
+var movimientoPelota, time, velocidadPelota = 2,
+   posX, score, gameOver;
 var banX = false,
    banY = false,
-   bandera = false;
-start();
+   bandera = false,
+   direccionIzq = false;
 
-//MUSTRA EL MENSAJE DE BIENVENIDA AL USUARIO
+//SE CONFIGURA EL ENTORNO DEL JUEGO
+configuracion();
+
+//MUSTRA EL MENSAJE DE BIENVENIDA AL USUARIO.
 canvas.font = "30px Arial";
 canvas.fillText("Bienvenido", 220, 130);
 canvas.font = "18px Arial";
@@ -24,21 +27,15 @@ document.addEventListener('keydown', function(e) {
       mover("right");
    else if (e.which == 13 && bandera == false && gameOver == false) {
       //INICIA EL JUEGO
-      bandera = true;
-      canvas.fillRect(posX, 0, 70, 5);
-      canvas.fillRect(posX, 395, 70, 5);
-      movimientoPelota = setInterval(moverpelota, time);
+      start();
    } else if (e.which == 32 && gameOver == true) {
       //INICIA EL JUEGO NUEVAMENTE.
-      bandera = true;
+      configuracion();
       start();
-      canvas.fillRect(posX, 0, 70, 5);
-      canvas.fillRect(posX, 395, 70, 5);
-      movimientoPelota = setInterval(moverpelota, time);
    }
 }, false);
 
-function start() {
+function configuracion() {
    //SE INICIALIZAN LAS VARIABLES NECESARIAS.
    posX = 255;
    time = 15;
@@ -57,6 +54,13 @@ function start() {
    pelotaY = Math.round(Math.random() * 100 + 150);
 }
 
+function start() {
+   bandera = true;
+   canvas.fillRect(posX, 0, 70, 5);
+   canvas.fillRect(posX, 395, 70, 5);
+   movimientoPelota = setInterval(moverpelota, time);
+}
+
 function mover(direccion) {
    //SE ELIMINAN LAS RAQUETAS DE LA POSICION OBSOLETA PARA DIBUJARLAS NUEVAMENTE.
    canvas.fillStyle = "#000";
@@ -65,12 +69,10 @@ function mover(direccion) {
    //SE DECIDE HACIA DONDE SE MOVERAN LAS RAQUETAS.
    switch (direccion) {
       case "left":
-         if (posX > 15)
-            posX -= desplazamiento;
+         if (posX > 15) posX -= desplazamiento;
          break;
       case "right":
-         if (posX < 510)
-            posX += desplazamiento;
+         if (posX < 510) posX += desplazamiento;
          break;
    }
    //SE DIBUJAN LAS RAQUETAS SUPERIOR E INFERIOR.
@@ -87,14 +89,10 @@ function moverpelota() {
    canvas.closePath();
    canvas.fill();
    /// MOVIMIENTO DE LA PELOTA EN EL EJE X
-   if (pelotaX == 575 && banX == false)
-      banX = true;
-   if (pelotaX == 20 && banX == true)
-      banX = false;
-   if (pelotaX < 575 && banX == false)
-      pelotaX++;
-   if (pelotaX > 20 && banX == true)
-      pelotaX--;
+   if (pelotaX == 575 && banX == false) banX = true;
+   if (pelotaX == 20 && banX == true) banX = false;
+   if (pelotaX < 575 && banX == false) pelotaX++;
+   if (pelotaX > 20 && banX == true) pelotaX--;
    //SE REDUCE EL TIEMPO DEL SETINTERVAL PARA HACER LA ANIMACION DE LA PELOTA MAS RAPIDA.
    if (time > 1) {
       clearInterval(movimientoPelota);
@@ -108,41 +106,29 @@ function moverpelota() {
    }
    /// MOVIMIENTO DE LA PELOTA EN EL EJE Y
    if (pelotaY >= 390 && banY == false)
-      if ((pelotaX - 3) <= posX + 70 && pelotaX + 3 >= posX) {
+      if (pelotaX - 3 <= posX + 70 && pelotaX + 3 >= posX) {
          banY = true;
          score++;
+         if ((pelotaX) <= posX + 35) banX = true;
+         else banX = false;
       }
-   else {
-      //LA PELOTA CHOCA EN EL BORDE INFERIOR Y SE DETIENE EL JUEGO.
-      clearInterval(movimientoPelota);
-      canvas.font = "30px Arial";
-      canvas.fillText("Game Over", 220, 130);
-      canvas.font = "18px Arial";
-      canvas.fillText("Presiona SPACE para jugar de nuevo...", 20, 390);
-      bandera = false;
-      gameOver = true;
-   }
+   //LA PELOTA CHOCA EN EL BORDE INFERIOR Y SE DETIENE EL JUEGO.
+   else juegoTerminado();
+
    if (pelotaY <= 10 && banY == true)
       if ((pelotaX - 3) <= posX + 70 && pelotaX + 3 >= posX) {
          banY = false;
          score++;
+         if (pelotaX <= posX + 35) banX = true;
+         else banX = false;
       }
-   else {
-      //LA PELOTA CHOCA EN EL BORDE SUPERIOR Y SE DETIENE EL JUEGO.
-      clearInterval(movimientoPelota);
-      canvas.font = "30px Arial";
-      canvas.fillText("Game Over", 220, 130);
-      canvas.font = "18px Arial";
-      canvas.fillText("Presiona SPACE para jugar de nuevo...", 20, 390);
-      bandera = false;
-      gameOver = true;
-   }
+   //LA PELOTA CHOCA EN EL BORDE SUPERIOR Y SE DETIENE EL JUEGO.
+   else juegoTerminado();
+
 
    //DETECTA LOS BORDES SUPERIOR E INFERIOR PARA CAMBIAR DE DIRECCION.
-   if (pelotaY < 390 && banY == false)
-      pelotaY += velocidadPelota;
-   if (pelotaY > 10 && banY == true)
-      pelotaY -= velocidadPelota;
+   if (pelotaY < 390 && banY == false) pelotaY += velocidadPelota;
+   if (pelotaY > 10 && banY == true) pelotaY -= velocidadPelota;
    //MUESTRA EN PANTALLA EL SCORE DEL JUGADOR EN UNA ETIQUETA.
    var scoreTexto = document.getElementById("score").innerHTML = 'Score: ' + score;
 }
@@ -150,4 +136,16 @@ function moverpelota() {
 function timing(reduccion) {
    time -= reduccion;
    movimientoPelota = setInterval(moverpelota, time);
+}
+
+//FUNCION PARA DETENER EL JUEGO
+function juegoTerminado() {
+   //LA PELOTA CHOCA EN EL BORDE INFERIOR O SUPERIOR Y SE DETIENE EL JUEGO.
+   clearInterval(movimientoPelota);
+   canvas.font = "30px Arial";
+   canvas.fillText("Game Over", 220, 130);
+   canvas.font = "18px Arial";
+   canvas.fillText("Presiona SPACE para jugar de nuevo...", 20, 390);
+   bandera = false;
+   gameOver = true;
 }
